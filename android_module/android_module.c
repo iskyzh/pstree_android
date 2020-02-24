@@ -1,31 +1,35 @@
-#include "../common/prinfo.h"
-
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/sched.h>
 #include <linux/kallsyms.h>
 #include <linux/highmem.h>
 
+#include "../common/prinfo.h"
+
 MODULE_LICENSE("GPL");
 
 #define __NR_ptreecall 100
-unsigned long *sys_call_table = (unsigned long *) 0xffffffff81800200;
-unsigned long *ia32_sys_call_table = (unsigned long *) 0xffffffff81803d80;
+unsigned long *sys_call_table = (unsigned long *) 0xc000d8c4;
+// unsigned long *ia32_sys_call_table = (unsigned long *) 0xffffffff81803d80;
 
 int make_rw(unsigned long address)
 {
+  /*
 	unsigned int level;
 	pte_t *pte = lookup_address(address, &level);
 	if(pte->pte &~ _PAGE_RW)
 		pte->pte |= _PAGE_RW;
+  */
 	return 0;
 }
 
 int make_ro(unsigned long address)
 {
+  /*
 	unsigned int level;
 	pte_t *pte = lookup_address(address, &level);
 	pte->pte = pte->pte &~ _PAGE_RW;
+  */
 	return 0;
 }
 
@@ -55,6 +59,7 @@ int task_to_prinfo(struct task_struct* task, struct prinfo* __user buf) {
   info.uid = task->cred->uid;
 
   get_task_comm(info.comm, task);
+  printk("%s\n", info.comm);
 
   copy_to_user(buf, &info, sizeof(struct prinfo));
 
