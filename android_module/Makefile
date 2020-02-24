@@ -4,8 +4,11 @@ CROSS_COMPILE ?= x86_64-linux-android-
 CC=$(CROSS_COMPILE)gcc
 LD=$(CROSS_COMPILE)ld
 
-all:
+all: gen.h
 	make -C $(KID) M=$(shell pwd) modules
 
 clean:
 	make -C $(KID) M=$(shell pwd) clean
+
+gen.h: gen.sh
+	@./gen.sh

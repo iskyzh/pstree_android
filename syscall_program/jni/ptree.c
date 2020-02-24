@@ -7,7 +7,7 @@ int main() {
     struct prinfo result[MAX_PRINFO];
     int n = MAX_PRINFO;
     int i;
-    syscall(100, &result, &n);
+    syscall(384, &result, &n);
     printf("%d tasks read.\n", n);
     for (i = 0; i < n; i++) {
         printf("%s %d %d %d %d %d %d\n", result[i].comm,

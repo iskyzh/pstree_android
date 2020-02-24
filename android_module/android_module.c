@@ -5,11 +5,12 @@
 #include <linux/highmem.h>
 
 #include "../common/prinfo.h"
+#include "gen.h"
 
 MODULE_LICENSE("GPL");
 
-#define __NR_ptreecall 100
-unsigned long *sys_call_table = (unsigned long *) 0xc000d8c4;
+#define __NR_ptreecall 384
+unsigned long *sys_call_table = (unsigned long *) sys_call_table_addr;
 // unsigned long *ia32_sys_call_table = (unsigned long *) 0xffffffff81803d80;
 
 int make_rw(unsigned long address)
