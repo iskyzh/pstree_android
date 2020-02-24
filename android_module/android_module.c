@@ -31,16 +31,53 @@ int make_ro(unsigned long address)
 
 static int (*oldcall)(void);
 
-asmlinkage int sys_ptreecall(struct prinfo *buf, int* nr)
-{
-  struct task_struct *task;
-  printk("In syscall!");
+int task_to_prinfo(struct task_struct* task, struct prinfo *buf) {
+  struct prinfo info;
+  struct list_head *child_task, *sibling_task;
+
+  info.parent_pid = task->parent->pid; // TODO: init?
+  info.pid = task->pid;
+
+  child_task = &(task->children);
   
+  if (list_empty(child_task))
+    info.first_child_pid = 0;
+  else
+    info.first_child_pid = list_entry(child_task->next, struct task_struct, sibling)->pid;
+
+  sibling_task = &(task->sibling);
+  if (list_empty(sibling_task))
+    info.next_sibling_pid = 0;
+  else
+    info.next_sibling_pid = list_entry(sibling_task->next, struct task_struct, sibling)->pid;
+  
+  info.state = task->state;
+  info.uid = task->cred->uid;
+
+  get_task_comm(info.comm, task);
+
+  copy_to_user(buf, &info, sizeof(struct prinfo));
+
+  return 0;
+}
+
+int sys_ptreecall_iterate(struct prinfo *buf, int nr) {
+  int N = nr, i = 0;
+  struct task_struct *task;
+
   for_each_process(task)
   {
-    printk("%s [%d]\n", task->comm, task->pid);
+    task_to_prinfo(task, &buf[i]);
+    ++i;
+    if (i == N) return N;
   }
+  return i;
+}
 
+asmlinkage int sys_ptreecall(struct prinfo *buf, int* nr)
+{
+  int new_nr = sys_ptreecall_iterate(buf, *nr);
+  copy_to_user(nr, &new_nr, sizeof(new_nr));
   return 0;
 }
 
