@@ -31,7 +31,7 @@ int make_ro(unsigned long address)
 
 static int (*oldcall)(void);
 
-int task_to_prinfo(struct task_struct* task, struct prinfo *buf) {
+int task_to_prinfo(struct task_struct* task, struct prinfo* __user buf) {
   struct prinfo info;
   struct list_head *child_task, *sibling_task;
 
@@ -61,7 +61,7 @@ int task_to_prinfo(struct task_struct* task, struct prinfo *buf) {
   return 0;
 }
 
-int sys_ptreecall_iterate(struct prinfo *buf, int nr) {
+int sys_ptreecall_iterate(struct prinfo __user *buf, int nr) {
   int N = nr, i = 0;
   struct task_struct *task;
 
@@ -74,10 +74,13 @@ int sys_ptreecall_iterate(struct prinfo *buf, int nr) {
   return i;
 }
 
-asmlinkage int sys_ptreecall(struct prinfo *buf, int* nr)
+asmlinkage int sys_ptreecall(struct prinfo __user *buf, int __user *nr)
 {
-  int new_nr = sys_ptreecall_iterate(buf, *nr);
-  copy_to_user(nr, &new_nr, sizeof(new_nr));
+  int user_nr;
+  int new_nr;
+  get_user(user_nr, nr);
+  new_nr = sys_ptreecall_iterate(buf, user_nr);
+  put_user(new_nr, nr);
   return 0;
 }
 
