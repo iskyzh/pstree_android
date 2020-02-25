@@ -4,3 +4,4 @@ node_modules
 /.fseventsd/
 /.Trashes/
 /android-ndk-linux/
+/goldfish/
