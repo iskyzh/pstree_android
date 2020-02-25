@@ -9,7 +9,7 @@
 
 MODULE_LICENSE("GPL");
 
-#define __NR_ptreecall 384
+#define __NR_ptreecall 383
 unsigned long *sys_call_table = (unsigned long *) sys_call_table_addr;
 // unsigned long *ia32_sys_call_table = (unsigned long *) 0xffffffff81803d80;
 
@@ -48,26 +48,40 @@ int task_to_prinfo(struct task_struct* task, struct prinfo* __user buf) {
   if (list_empty(child_task))
     info.first_child_pid = 0;
   else
-    info.first_child_pid = list_entry(child_task->next, struct task_struct, sibling)->pid;
+    info.first_child_pid = list_first_entry(child_task, struct task_struct, sibling)->pid;
 
   sibling_task = &(task->sibling);
   if (list_empty(sibling_task))
     info.next_sibling_pid = 0;
   else
-    info.next_sibling_pid = list_entry(sibling_task->next, struct task_struct, sibling)->pid;
+    info.next_sibling_pid = list_first_entry(sibling_task, struct task_struct, sibling)->pid;
   
   info.state = task->state;
   info.uid = task->cred->uid;
 
   get_task_comm(info.comm, task);
-  printk("%s\n", info.comm);
-
   copy_to_user(buf, &info, sizeof(struct prinfo));
 
   return 0;
 }
 
-int sys_ptreecall_iterate(struct prinfo __user *buf, int nr) {
+static int ptree_dfs(struct prinfo __user *buf, struct task_struct *task, int N) {
+  struct list_head *child_tasks = &(task->children), *pos;
+  struct task_struct *child_task = NULL;
+  int i = 1;
+  int sz = 0;
+  task_to_prinfo(task, buf);
+  if (list_empty(child_tasks)) return 1;
+  list_for_each(pos, child_tasks) {
+    child_task = list_entry(pos, struct task_struct, sibling);
+    sz = ptree_dfs(buf + i, child_task, N);
+    i += sz;
+  }
+  return i;
+}
+
+
+int obs_sys_ptreecall_iterate(struct prinfo __user *buf, int nr) {
   int N = nr, i = 0;
   struct task_struct *task;
 
@@ -78,6 +92,11 @@ int sys_ptreecall_iterate(struct prinfo __user *buf, int nr) {
     if (i == N) return N;
   }
   return i;
+}
+
+
+static int sys_ptreecall_iterate(struct prinfo __user *buf, int nr) {
+  return ptree_dfs(buf, &init_task, nr);
 }
 
 asmlinkage int sys_ptreecall(struct prinfo __user *buf, int __user *nr)

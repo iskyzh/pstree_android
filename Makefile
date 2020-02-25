@@ -14,6 +14,9 @@ run: module build rmmod
 build: FORCE
 	cd syscall_program && ndk-build
 
+clean:
+	cd android_module && make clean
+
 FORCE:
 
-.PHONY: FORCE
+.PHONY: FORCE clean
