@@ -7,6 +7,7 @@
 int ptree(struct prinfo* result, int* n) {
     return syscall(383, result, n);
 }
+
 int main() {
     struct prinfo result[MAX_PRINFO];
     int n = MAX_PRINFO;
