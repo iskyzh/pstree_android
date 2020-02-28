@@ -6,13 +6,17 @@ rmmod: FORCE
 module: FORCE
 	cd android_module && ./compile.sh
 
-run: module build rmmod
+run: module build test rmmod
 	adb push ./android_module/android_module.ko /data/local
 	adb push ./syscall_program/obj/local/$(ARCH)/ptree /data/local
-	adb shell "cd /data/local && insmod android_module.ko && ./ptree"
+	adb push ./exec_test/obj/local/$(ARCH)/exec_test /data/local
+	adb shell "cd /data/local && insmod android_module.ko && ./exec_test"
 
 build: FORCE
 	cd syscall_program && ndk-build
+
+test: FORCE
+	cd exec_test && ndk-build
 
 clean:
 	cd android_module && make clean
