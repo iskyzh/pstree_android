@@ -9,7 +9,7 @@
 
 MODULE_LICENSE("GPL");
 
-#define __NR_ptreecall 383
+#define __NR_ptreecall 356
 unsigned long *sys_call_table = (unsigned long *) sys_call_table_addr;
 
 static int (*oldcall)(void);
@@ -137,12 +137,12 @@ int init_module(void) {
   oldcall = (int(*)(void))(sys_call_table[__NR_ptreecall]);
   sys_call_table[__NR_ptreecall] = (unsigned long) sys_ptreecall;
   
-  printk(KERN_INFO "pstree module loaded %p\n", sys_call_table);
+  printk(KERN_INFO "ptree module loaded %p\n", sys_call_table);
   return 0;
 }
 
 void cleanup_module(void) {
   sys_call_table[__NR_ptreecall] = (unsigned long) oldcall;
 
-  printk(KERN_INFO "pstree module unloaded\n");
+  printk(KERN_INFO "ptree module unloaded\n");
 }

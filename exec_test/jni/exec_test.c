@@ -12,7 +12,7 @@ int main()
 
     if (fork() == 0) {
         child_pid = getpid();
-        printf("StudentIDChild is %d\n", child_pid);
+        printf("518021910395 Child is %d\n", child_pid);
         sprintf(arg1, "%d", parent_pid);
         sprintf(arg2, "%d", child_pid);
         char *args[] = { "./ptree", arg1, arg2, NULL };
@@ -21,7 +21,7 @@ int main()
             return -1;
         }
     } else {
-        printf("StudentIDParent is %d\n", getpid());
+        printf("518021910395 Parent is %d\n", getpid());
         return wait(NULL);
     }
 }

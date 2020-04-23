@@ -6,7 +6,7 @@
 #define KERNEL_ADDR 0xc000d8c4
 
 int ptree(struct prinfo* result, int* n) {
-    return syscall(383, result, n);
+    return syscall(356, result, n);
 }
 
 void test_suite(const char* case_name) {

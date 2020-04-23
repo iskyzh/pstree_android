@@ -1,6 +1,7 @@
-obj-m += android_module.o
+obj-m += ptree_module.o
 KID ?= ../goldfish
-CROSS_COMPILE ?= x86_64-linux-android-
+ARCH=arm
+CROSS_COMPILE ?= arm-linux-androideabi-
 CC=$(CROSS_COMPILE)gcc
 LD=$(CROSS_COMPILE)ld
 

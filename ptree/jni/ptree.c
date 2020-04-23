@@ -6,7 +6,7 @@
 #define MAX_DEPTH 256
 
 int ptree(struct prinfo* result, int* n) {
-    return syscall(383, result, n);
+    return syscall(356, result, n);
 }
 
 int main(int argc, char *argv[]) {
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
         while (depth > 0 && pid_stack[depth - 1] != p->parent_pid) depth--;
         for (j = 0; j < depth; j++) if (j != depth - 1) printf("    "); else printf("  |-");
         if (p->pid == parent_pid || p->pid == child_pid) printf("\033[32m");
-        printf("%s,%ld,%ld,%d,%d,%d,%d\n",
+        printf("%s,%d,%ld,%d,%d,%d,%ld\n",
             p->comm, p->pid, p->state,
             p->parent_pid, p->first_child_pid,
             p->next_sibling_pid, p->uid);
