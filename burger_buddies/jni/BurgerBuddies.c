@@ -7,7 +7,7 @@
 #include <stdarg.h>
 
 #define ENABLE_YIELD
-#define RUN_FOR_SECS 5
+#define RUN_FOR_SECS 1
 
 struct cook {
     pthread_t tid;
@@ -37,7 +37,7 @@ int MAX_ON_RACK = 0, MAX_COOK = 0, MAX_CUSTOMER = 0, MAX_CASHIER = 0;
 
 void yield() {
 #ifdef ENABLE_YIELD
-    usleep(rand() % 500000 + 500000);
+    usleep(rand() % 5000 + 5000);
 #endif
 }
 
@@ -78,13 +78,13 @@ void* cashier_do(void* _self) {
     yield();
     while (1) {
         sem_wait(&self->queue);
-        printf_log("%s accepts an order\n", self->identifier);
+        printf_log("%s accepts an order.\n", self->identifier);
         sem_post(&self->ready);
         // wait for burger on rack
         sem_wait(&rack_empty);
-        sem_post(&rack_full);
         // notify customer
         printf_log("%s take a burger to customer.\n", self->identifier);
+        sem_post(&rack_full);
         sem_post(&self->serve);
         yield();
     }
@@ -135,7 +135,7 @@ int main(int argc, char* argv[])  {
         return 1;
     }
 
-    printf("Cooks [%d], Cashiers [%d], Customers [%d]\n", MAX_COOK, MAX_CASHIER, MAX_CUSTOMER);
+    printf("Cooks [%d], Cashiers [%d], Customers [%d], Rack[%d]\n", MAX_COOK, MAX_CASHIER, MAX_CUSTOMER, MAX_ON_RACK);
 
     // allocate memory for structs
     cooks = (struct cook*) malloc(MAX_COOK * sizeof (struct cook));

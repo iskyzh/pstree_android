@@ -93,6 +93,14 @@ void* concurrent_test(void* ret_val) {
     return NULL;
 }
 
+void* concurrent_test_fail(void* ret_val) {
+    int n = 100;
+    int *ret = ret_val;
+    ptree(NULL, &n);
+    *ret = 1;
+    return NULL;
+}
+
 #define MAX_CONCURRENT 50
 
 int test_concurrent() {
@@ -101,22 +109,43 @@ int test_concurrent() {
     int i;
 
     test_suite("concurrent test");
-    test_case("spawn 50 ptree");
+    {
+        test_case("spawn 50 ptree");
 
-    for (i = 0; i < MAX_CONCURRENT; i++) {
-        pthread_create(&tid[i], NULL, concurrent_test, &result[i]);
+        for (i = 0; i < MAX_CONCURRENT; i++) {
+            pthread_create(&tid[i], NULL, concurrent_test, &result[i]);
+        }
+
+        for (i = 0; i < MAX_CONCURRENT; i++) {
+            pthread_join(tid[i], NULL);
+        }
+
+        int ok = 1;
+        for (i = 0; i < MAX_CONCURRENT; i++) {
+            if (result[i] <= 0) ok = 0;
+        }
+
+        test_assert(ok);
     }
 
-    for (i = 0; i < MAX_CONCURRENT; i++) {
-        pthread_join(tid[i], NULL);
-    }
+    {
+        test_case("spawn 50 ptree with wrong parameter");
 
-    int ok = 1;
-    for (i = 0; i < MAX_CONCURRENT; i++) {
-        if (result[i] <= 0) ok = 0;
-    }
+        for (i = 0; i < MAX_CONCURRENT; i++) {
+            pthread_create(&tid[i], NULL, concurrent_test_fail, &result[i]);
+        }
 
-    test_assert(ok);
+        for (i = 0; i < MAX_CONCURRENT; i++) {
+            pthread_join(tid[i], NULL);
+        }
+
+        int ok = 1;
+        for (i = 0; i < MAX_CONCURRENT; i++) {
+            if (result[i] <= 0) ok = 0;
+        }
+        
+        test_assert(ok);
+    }
 
     return 0;
 }
