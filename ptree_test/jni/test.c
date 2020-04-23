@@ -1,3 +1,12 @@
+/** 
+ * Test cases for ptree syscall
+ * 
+ * This program tests ptree syscall against invalid input,
+ * concurrent call and small buffer. You may run this program
+ * by running `make test_ptree`, that will automatically build,
+ * push and run this program on Android emulator.
+*/
+
 #include <stdio.h>
 #include <pthread.h> 
 #include "../../common/prinfo.h"
@@ -5,6 +14,7 @@
 #define MAX_PRINFO 100
 #define KERNEL_ADDR 0xc000d8c4
 
+/// ptree syscall
 int ptree(struct prinfo* result, int* n) {
     return syscall(356, result, n);
 }
@@ -17,12 +27,14 @@ void test_case(const char* case_name) {
     printf("   %s... ", case_name);
 }
 
+/// print OK when x != 0, and fail when x = 0
 void test_assert(int x) {
     if (x) printf("\033[32mOK");
     else printf("\033[31mFailed");
     printf("\033[39m\n");
 }
 
+/// test pointer of NULL or to kernel space
 int test_invalid_pointer() {
     struct prinfo result[MAX_PRINFO];
     int n = MAX_PRINFO;
@@ -49,6 +61,7 @@ int test_invalid_pointer() {
     return 0;
 }
 
+/// test if ptree works well on small buffer
 int test_functionality() {
     struct prinfo result[MAX_PRINFO];
     int n = MAX_PRINFO;
@@ -72,6 +85,7 @@ int test_functionality() {
     return 0;
 }
 
+/// test some cases that might cause page fault
 int test_edge_case() {
     struct prinfo *result = malloc(1000 * sizeof(struct prinfo));
     int n = 1000;
@@ -84,6 +98,7 @@ int test_edge_case() {
     return 0;
 }
 
+/// concurrent test thread
 void* concurrent_test(void* ret_val) {
     struct prinfo *result = malloc(100 * sizeof(struct prinfo));
     int n = 100;
@@ -93,6 +108,7 @@ void* concurrent_test(void* ret_val) {
     return NULL;
 }
 
+/// concurrent test thread that force ptree to fail
 void* concurrent_test_fail(void* ret_val) {
     int n = 100;
     int *ret = ret_val;
@@ -103,6 +119,7 @@ void* concurrent_test_fail(void* ret_val) {
 
 #define MAX_CONCURRENT 50
 
+/// test concurrent requests to kernel ptree module
 int test_concurrent() {
     pthread_t tid[MAX_CONCURRENT];
     int result[MAX_CONCURRENT] = { 0 };

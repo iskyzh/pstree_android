@@ -1,3 +1,14 @@
+/**
+ * Burger Buddies problem
+ * 
+ * This program spawns a thread for each person,
+ * and synchronize them with semaphore. You may
+ * run this program by 
+ * `make run_bbc BBC_PARAMETER="2 4 41 10"`,
+ * or use my script to automatically test it by
+ * running `make test_bbc`.
+*/
+
 #include <pthread.h> 
 #include <stdio.h> 
 #include <stdlib.h> 
@@ -6,15 +17,21 @@
 #include <semaphore.h>
 #include <stdarg.h>
 
+// enable sleep when a person completes his or her task
 #define ENABLE_YIELD
+// after `RUN_FOR_SECS` seconds the program will exit
 #define RUN_FOR_SECS 1
 
+/// cook struct stores all information needed for its
+/// corresponding thread function
 struct cook {
     pthread_t tid;
     int id;
     char identifier[256];
 } *cooks;
 
+/// cashier struct stores all information needed for its
+/// corresponding thread function
 struct cashier {
     pthread_t tid;
     int id;
@@ -23,18 +40,28 @@ struct cashier {
     int customer;
 } *cashiers;
 
+/// customer struct stores all information needed for its
+/// corresponding thread function
 struct customer {
     pthread_t tid;
     int id;
     char identifier[256];
 } *customers;
 
+/// rack_empty and rack_full are used to put constraint
+/// on how many burgers can be put on rack
 sem_t rack_empty;
 sem_t rack_full;
+
+/// info_lock promises that each line of log will be
+/// printed as a whole
 pthread_mutex_t info_lock;
 
+
+/// rack, cook, customer and cashier parameters from command line
 int MAX_ON_RACK = 0, MAX_COOK = 0, MAX_CUSTOMER = 0, MAX_CASHIER = 0;
 
+/// yield function will sleep a person for random interval
 void yield() {
 #ifdef ENABLE_YIELD
     usleep(rand() % 5000 + 5000);
@@ -148,6 +175,7 @@ int main(int argc, char* argv[])  {
         return 1;
     }
 
+    // initialize semaphores
     if (sem_init(&rack_full, 0, MAX_ON_RACK) != 0) {
         printf_log("failed to initialize rack full semaphore.\n");
         return 1;
@@ -158,16 +186,18 @@ int main(int argc, char* argv[])  {
         return 1;
     }
 
+    // initialize cooks
     for (i = 0; i < MAX_COOK; i++) {
         cooks[i].id = i;
         sprintf(cooks[i].identifier, "Cook [%d]", i);
     }
-
+    // initialize customers
     for (i = 0; i < MAX_CUSTOMER; i++) {
         customers[i].id = i;
         sprintf(customers[i].identifier, "Customer [%d]", i);
     }
 
+    // initialize cashiers
     for (i = 0; i < MAX_CASHIER; i++) {
         cashiers[i].id = i;
         cashiers[i].customer = -1;
@@ -179,6 +209,7 @@ int main(int argc, char* argv[])  {
 
     printf("Begin run.\n");
 
+    // spawn threads for each person
     for (i = 0; i < MAX_COOK; i++) {
         pthread_create(&cooks[i].tid, NULL, cook_do, &cooks[i]);
     }
@@ -192,11 +223,14 @@ int main(int argc, char* argv[])  {
     }
 
 #ifdef RUN_FOR_SECS
+    // spawn timer thread, and exit after deadline
     pthread_create(&timeout, NULL, timeout_do, NULL);
     pthread_join(timeout, NULL);
     return 0;
 #endif
 
+    // if program is allowed to run for unlimited time,
+    // program will exit after each thread exits
     for (i = 0; i < MAX_COOK; i++) {
         pthread_join(cooks[i].tid, NULL);
     }
@@ -209,7 +243,8 @@ int main(int argc, char* argv[])  {
         sem_destroy(&cashiers[i].ready);
         sem_destroy(&cashiers[i].serve);
     }
-
+    
+    // destroy structures
     sem_destroy(&rack_full);
     sem_destroy(&rack_empty);
     pthread_mutex_destroy(&info_lock);

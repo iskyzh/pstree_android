@@ -1,3 +1,12 @@
+/**
+ * exec test program
+ *  
+ * This program will fork itself, and run ptree
+ * program in the child process. It will pass parent
+ * pid and child pid to ptree, therefore highlighting
+ * these two processes in process tree in green color.
+*/
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>

@@ -1,3 +1,11 @@
+/** 
+ * ptree module
+ * 
+ * This program contains ptree kernel module. You can build and push
+ * this kernel module by running `make install`. You may test this
+ * module with my own test case by running `make test_ptree`.
+*/
+
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/sched.h>
@@ -12,6 +20,7 @@ MODULE_LICENSE("GPL");
 #define __NR_ptreecall 356
 unsigned long *sys_call_table = (unsigned long *) sys_call_table_addr;
 
+// temporary variable to save previous syscall on 356
 static int (*oldcall)(void);
 
 /// @param task: task to save
@@ -19,25 +28,35 @@ static int (*oldcall)(void);
 int task_to_prinfo(struct task_struct* task, struct prinfo* buf) {
   struct list_head *child_task, *sibling_task;
 
-  buf->parent_pid = task->parent->pid;
+  // copy parent pid
+  if (task->parent) {
+    buf->parent_pid = task->parent->pid;
+  } else {
+    buf->parent_pid = 0;
+  }
+
+  // copy task pid
   buf->pid = task->pid;
 
+  // copy child pid
   child_task = &(task->children);
-  
   if (list_empty(child_task))
     buf->first_child_pid = 0;
   else
     buf->first_child_pid = list_first_entry(child_task, struct task_struct, sibling)->pid;
 
+  // copy sibling task
   sibling_task = &(task->sibling);
   if (list_empty(sibling_task))
     buf->next_sibling_pid = 0;
   else
     buf->next_sibling_pid = list_first_entry(sibling_task, struct task_struct, sibling)->pid;
-  
+
+  // copy task state and uid
   buf->state = task->state;
   buf->uid = task->cred->uid;
 
+  // copy task comm
   get_task_comm(buf->comm, task);
 
   return 0;
@@ -82,6 +101,11 @@ static int sys_ptreecall_iterate(struct prinfo *buf, int nr) {
   return ptree_dfs(buf, &init_task, nr);
 }
 
+/// syscall entrance
+/// @param buf: user space buffer to hold process info
+/// @param nr: user space pointer of maximum allowed process,
+///            will be set to real number of tasks copied
+/// @returns: task number in system, maybe larger than nr
 asmlinkage int sys_ptreecall(struct prinfo __user *buf, int __user *nr) {
   int user_nr;
   int new_nr;
@@ -93,6 +117,7 @@ asmlinkage int sys_ptreecall(struct prinfo __user *buf, int __user *nr) {
     return -EFAULT;
   }
 
+  // reject negative nr
   if (user_nr <= 0) {
     printk(KERN_INFO "bad nr\n");
     return -EFAULT;
@@ -101,6 +126,7 @@ asmlinkage int sys_ptreecall(struct prinfo __user *buf, int __user *nr) {
   // create kernel memory mapping
   k_buf = kmalloc(sizeof(struct prinfo) * (unsigned int) user_nr, GFP_KERNEL);
 
+  // return if failed to allocate kernel buffer
   if (k_buf == NULL) {
     printk(KERN_INFO "failed to allocate memory\n");
     return -EFAULT;

@@ -1,3 +1,12 @@
+/**
+ * Burger Buddies Test
+ * 
+ * This program parses Burger Buddies output log,
+ * and automatically analyze it to find inconsistency
+ * in the log. You may run my test sequence by
+ * `make test_bbc`.
+*/
+
 #include <iostream>
 #include <string>
 #include <fstream>
