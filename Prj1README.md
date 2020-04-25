@@ -12,17 +12,20 @@ export KID=$HOME/kernel/goldfish
 
 Then, start the emulator. Wait until `adb devices` can list the emulator device.
 
-After all, just invoke these two commands to test my solution.
+After all, just invoke these four commands to test my solution.
 
 ```bash
 make all
 make test_bbc
+make run_bbc BBC_PARAMETER="2 4 41 10"
 make rmmod
 ```
 
 `make all` tests ptree kernel module automatically with my own test case, and prints a process tree in problem 3.
 
 `make test_bbc` automatically tests my burger buddies solution, by first redirecting BBC log on Android device to local `log.txt`, and then use my test script to check if there's any inconsistency in the log file.
+
+`make run_bbc` will print out logs for Burger Buddies problem.
 
 `make rmmod` removes my kernel module (but not delete the file). Run this command and then you can test next student's project.
 
@@ -40,6 +43,8 @@ That's all :)
 │   │   └── BurgerBuddies.c
 │   └── result                  Burger Buddies log output folder
 │       └── dummy.txt
+├── burger_buddies_cond         A Burger Buddies solution based on condition variable
+│   └── main.cpp
 ├── burger_buddies_test         Burger Buddies log checker
 │   ├── Makefile
 │   └── test.cpp
